@@ -21,8 +21,12 @@ public class MQService {
         //amqpTemplate.convertAndSend("","queue-kk",serializeGoods);
 
         //3.以json进行传输
-        ObjectMapper mapper=new ObjectMapper();
-        String message=mapper.writeValueAsString(goods);
-        amqpTemplate.convertAndSend("queue-kk",message);
+        ObjectMapper mapper = new ObjectMapper();
+        String message = mapper.writeValueAsString(goods);
+        //amqpTemplate.convertAndSend("queue-kk",message);
+        amqpTemplate.convertAndSend("d-quence2",message);
+        amqpTemplate.convertAndSend("d-quence1",message);
+        amqpTemplate.convertAndSend("j-quence",message);
+        amqpTemplate.convertAndSend("j-fanout-quence",message);
     }
 }
