@@ -1,15 +1,65 @@
 package ppppp.mq;
 
-import com.rabbitmq.client.BuiltinExchangeType;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+
+import java.io.IOException;
 
 @SpringBootTest
 class P2ApplicationTests {
 
+   @Test
+   public void T_M() throws Exception {
+       Connection connection = getConnection();
+       Channel channel = connection.createChannel();
+       String message = "Hello World!";
+
+        //1.开启消息确认
+       channel.confirmSelect();
+        //2.发送消息
+       channel.basicPublish("ex2", "c", null, message.getBytes());
+        //3.获取确认
+       boolean b = channel.waitForConfirms();
+       System.out.println("消息发送"+(b?"成功":"失败"));
+
+       channel.close();
+       connection.close();
+   }
+
+   @Test
+   public void T_异步批量发送消息() throws Exception {
+       Connection connection = getConnection();
+       Channel channel = connection.createChannel();
+       String message = "Hello World!";
+
+        //1.开启消息确认
+       channel.confirmSelect();
+        //2.发送消息
+       for (int i=1; i<=10; i++) {
+           message += i;
+           System.out.println(i);
+           channel.basicPublish("ex1", "c", null, message.getBytes());
+           Thread.sleep(1000);
+       }
+
+
+        //3.开启异步confirm
+       channel.addConfirmListener(new ConfirmListener() {
+           //参数l表示返回的消息标识，
+           //参数b表示是否为批量confirm
+
+           public void handleAck(long l, boolean b) throws IOException {
+               System.out.println("----消息发送成功");
+           }
+           public void handleNack(long l, boolean b) throws IOException {
+               System.out.println("----消息发送失败");
+           }
+       });
+
+       //channel.close();
+       //connection.close();
+   }
 
     @Test
     void contextLoads() throws Exception {
