@@ -9,3 +9,5 @@ spring:
     virtual-host: host1
     username: kk
     password: kk
+    publisher-confirm-type: simple
+    publisher-returns: true

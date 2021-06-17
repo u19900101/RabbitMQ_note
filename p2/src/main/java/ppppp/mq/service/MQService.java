@@ -24,9 +24,11 @@ public class MQService {
         ObjectMapper mapper = new ObjectMapper();
         String message = mapper.writeValueAsString(goods);
         //amqpTemplate.convertAndSend("queue-kk",message);
-        amqpTemplate.convertAndSend("d-quence2",message);
-        amqpTemplate.convertAndSend("d-quence1",message);
-        amqpTemplate.convertAndSend("j-quence",message);
-        amqpTemplate.convertAndSend("j-fanout-quence",message);
+        //amqpTemplate.convertAndSend("d-quence2",message);
+        //amqpTemplate.convertAndSend("d-quence1",message);
+        //amqpTemplate.convertAndSend("j-quence",message);
+        //amqpTemplate.convertAndSend("j-fanout-quence",message);
+        String key = goods.getGoodsName();
+        amqpTemplate.convertAndSend("ex2",key,message);
     }
 }
