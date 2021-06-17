@@ -35,20 +35,11 @@ class P2ApplicationTests {
 
         //1.开启消息确认
        channel.confirmSelect();
-        //2.发送消息
-       for (int i=1; i<=10; i++) {
-           message += i;
-           System.out.println(i);
-           channel.basicPublish("ex1", "c", null, message.getBytes());
-           Thread.sleep(1000);
-       }
 
-
-        //3.开启异步confirm
+       //3.开启异步confirm
        channel.addConfirmListener(new ConfirmListener() {
            //参数l表示返回的消息标识，
            //参数b表示是否为批量confirm
-
            public void handleAck(long l, boolean b) throws IOException {
                System.out.println("----消息发送成功");
            }
@@ -57,10 +48,58 @@ class P2ApplicationTests {
            }
        });
 
+       //4.添加return监控
+       channel.addReturnListener(new ReturnListener() {
+           //消息未分发到队列中时，会执行此语句
+           @Override
+           public void handleReturn(int replyCode,
+                                    String replyText,
+                                    String exchange,
+                                    String routingKey,
+                                    AMQP.BasicProperties properties, byte[] body) throws IOException {
+               System.out.println("发送失败*****");
+               System.out.println("replyCode————"+replyCode);
+               System.out.println("replyText————"+replyText);
+               System.out.println("exchange————"+exchange);
+               System.out.println("routingKey————"+routingKey);
+               System.out.println("body————"+new String(body));
+           }
+       });
+
+        //2.发送消息
+       for (int i=1; i<=10; i++) {
+           message += i;
+           //channel.basicPublish("ex2", "c", null, message.getBytes());
+           channel.basicPublish("ex2", "c",true, null, message.getBytes());
+       }
        //channel.close();
        //connection.close();
    }
 
+
+   @Test
+   public void T_消息的return机制() throws Exception {
+       //创建一个新的连接
+       Connection connection = getConnection();
+       //创建一个通道
+       Channel channel = connection.createChannel();
+
+       //声明要关注的队列
+       //channel.queueDeclare("queue1", false, false, false, null);
+       //DefaultConsumer类实现了Consumer接口，通过传入一个频道，
+       // 告诉服务器我们需要那个频道的消息，如果频道中有消息，就会执行回调函数handleDelivery
+       Consumer consumer = new DefaultConsumer(channel) {
+           public void handleDelivery(String consumerTag, Envelope envelope,
+                                      AMQP.BasicProperties properties, byte[] body)
+                   throws IOException {
+               String message = new String(body, "UTF-8");
+               System.out.println("Customer Received '" + message + "'");
+           }
+       };
+       //自动回复队列应答 -- RabbitMQ中的消息确认机制
+       channel.basicConsume("queue3", true, consumer);
+
+   }
     @Test
     void contextLoads() throws Exception {
         // 获取到连接以及mq通道
